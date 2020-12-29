@@ -1,0 +1,66 @@
+﻿<Window x:Class="HeatTracker.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:tobii="clr-namespace:Tobii.Interaction.Wpf;assembly=Tobii.Interaction.Net"
+        xmlns:local="clr-namespace:HeatTracker"
+        mc:Ignorable="d"    
+        WindowStyle="ToolWindow"
+        Title="MainWindow"
+        KeyDown="OnKeyDownHandler"
+        WindowState="Normal"
+        tobii:Behaviors.IsGazeAware="True">
+    <StackPanel x:Name="LayoutRoot">
+        <Image x:Name="ImageControl"  VerticalAlignment="Top" HorizontalAlignment="Left"/>
+        <StackPanel x:Name="buttonPanel" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Button Height="20" Width="70" Content="Browse"  HorizontalAlignment="Center" VerticalAlignment="Center" Canvas.Top="824" Canvas.Left="837" Click="Browse_Folder" x:Name="button" Visibility="Visible"/>
+            <TextBlock Text="Click Browse to select an Image"  Canvas.Top="249" Canvas.Left="194" x:Name="TextBlock" Visibility="Hidden" >
+                <TextBlock.Style>
+                    <Style >
+                        <Setter Property="TextBlock.FontSize" Value="26"/>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </StackPanel>
+        <Canvas HorizontalAlignment="Left" x:Name="canvasArea">
+            <TextBlock Text="Circles will be shown on screen.To Calibrate look at the circles for 10 sec. Press Space to begin."  Canvas.Top="249" Canvas.Left="194" x:Name="textBox">
+                <TextBlock.Style>
+                    <Style >
+                        <Setter Property="TextBlock.FontSize" Value="26"/>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+            <Ellipse
+            Width="15"
+            Height="15"
+            Fill="Red"
+            Canvas.Left="100"
+            Canvas.Top="25" Visibility="Hidden" x:Name="circle1"/>
+                    <Ellipse
+            Width="15"
+            Height="15"
+            Fill="Red"
+            Canvas.Left="400"
+            Canvas.Top="25" Visibility="Hidden" x:Name="circle2" />
+                    <Ellipse
+            Width="15"
+            Height="15"
+            Fill="Red"
+            Canvas.Left="200"
+            Canvas.Top="200" Visibility="Hidden" x:Name="circle3"/>
+                    <Ellipse
+            Width="15"
+            Height="15"
+            Fill="Red"
+            Canvas.Left="100"
+            Canvas.Top="400" Visibility="Hidden" x:Name="circle4"/>
+            <Ellipse
+            Width="15"
+            Height="15"
+            Fill="Red"
+            Canvas.Left="400"
+            Canvas.Top="400" Visibility="Hidden" x:Name="circle5"/>
+        </Canvas>
+    </StackPanel>
+</Window>
