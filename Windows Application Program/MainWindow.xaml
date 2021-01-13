@@ -6,11 +6,10 @@
         xmlns:tobii="clr-namespace:Tobii.Interaction.Wpf;assembly=Tobii.Interaction.Net"
         xmlns:local="clr-namespace:HeatTracker"
         mc:Ignorable="d"    
-        WindowStyle="ToolWindow"
+        WindowStyle="None"
         Title="MainWindow"
         KeyDown="OnKeyDownHandler"
-        WindowState="Normal"
-        tobii:Behaviors.IsGazeAware="True">
+        WindowState="Maximized">
     <StackPanel x:Name="LayoutRoot">
         <Image x:Name="ImageControl"  VerticalAlignment="Top" HorizontalAlignment="Left"/>
         <StackPanel x:Name="buttonPanel" HorizontalAlignment="Center" VerticalAlignment="Center">

@@ -39,41 +39,95 @@ namespace HeatTracker
         private int Xoffset = 0;
         private int Yoffset = 0;
         public int width, height;
-        List<Muse> muses;
         Boolean useOffSet = false;
         List<int> X;
         List<int> Y;
+        List<String> Time;
         public Boolean close = false;
         public int[,] coordinatesArray;
-        int maxCircleRad = 26, count = 1;
+        int maxCircleRad = 6, count = 1;
         private WpfInteractorAgent _wpfInteractorAgent;
-        static string url = "http://127.0.0.1:5000/getData";
+        static string startUrl = "http://127.0.0.1:5000/start";
+        static string stopUrl = "http://127.0.0.1:5000/stop";
         string selectedFileName,path = "C:\\Users\\abhis\\Downloads\\HeatTracker\\BrainTumourProject\\";
 
-        class Muse
+        class EyeTracker
         { 
+            public List<int> x;
+            public List<int> y;
+            public List<String> time;
+
+            public EyeTracker(List<int> xx, List<int> yy, List<String> tt)
+            {
+                x = xx;
+                y = yy;
+                time = tt;
+            }
+        }
+        class TimeMuses
+        {
+            public List<Muses> time;
+
+            public TimeMuses(List<Muses> tm)
+            {
+                time = tm;
+            }
+
+            public List<Muses> getTime()
+            {
+                return time;
+            }
+        }
+
+        class Muses
+        {
+            public Muse  muse;
+            public String time;
+
+            public Muses(Muse ms, String tt)
+            {
+                muse = ms;
+                time = tt;
+            }
+
+            public Muse getMuse()
+            {
+                return muse;
+            }
+
+            public String getTime()
+            {
+                return time;
+            }
+        }
+
+        class Muse
+        {
+            public List<float> alpha;
             public List<float> beta;
             public List<float> theta;
-            public List<float> alpha;
-            public int x;
-            public int y;
 
-            public Muse(List<float> bt, List<float> al, List<float> th, int xx , int yy)
+            public Muse(List<float> xx, List<float> yy, List<float> tt)
             {
-                beta = bt;
-                alpha = al;
-                theta = th;
-                x = xx;
-                y = yy;
+                alpha = xx;
+                beta = yy;
+                theta = tt;
             }
-            public void setX(int xx)
+            public string getAlpha()
             {
-                x = xx;
+                string aph = string.Join(",", alpha);
+                return aph;
+            }
+            public string getBeta()
+            {
+                string bth = string.Join(",", beta);
+                return bth;
             }
 
-            public void setY(int yy)
+            public string getTheta()
             {
-                y = yy;
+                string tth = string.Join(",", theta);
+                return tth;
             }
         }
 
@@ -97,13 +151,9 @@ namespace HeatTracker
          */
         protected void getCoordinates()
         {
-            muses = new List<Muse>();
             X = new List<int>();
             Y = new List<int>();
-            /**
-             * code for async call
-             * getAsyncData();
-             */
+            Time = new List<String>();
             Xoffset = Xoffset / 5;
             Yoffset = Yoffset / 5;
             var gazePointDataStream = _host.Streams.CreateGazePointDataStream();
@@ -112,8 +162,8 @@ namespace HeatTracker
             {
                 // On the Next event, data comes as FixationData objects, wrapped in a StreamData<T> object.
                 SolidBrush maxCircleBr;
-                int x = (int)gzx - 20;
-                int y = (int)gzy - 50;
+                int x = (int)gzx;
+                int y = (int)gzy;
                 if (useOffSet)
                 {
                     x = (int)gzx - Xoffset;
@@ -161,33 +211,11 @@ namespace HeatTracker
                     * call the muse API to get data
                     */
                     Console.WriteLine("X-- "+x+" Y-- "+y);
-                    Boolean callMuse = true;
-                    int k = 3+x;
-                    int l = x-3;
-                    for (int i = 0; i < X.Count; i++)
-                    {
-                        if(!(X[i] > k || X[i] < l))
-                        {
-                            callMuse = false;
-                        }
-                    }
-                    if (callMuse)
-                    {
-                        X.Add(x);
-                        Y.Add(y);
-                        IRestResponse response = getSyncData();
-                        Muse muse = JsonConvert.DeserializeObject<Muse>(response.Content);
-                        muse.setX(x);
-                        muse.setY(y);
-                        muses.Add(muse);
-                        /**
-                         * fill ellipse
-                         */
-                        G = Graphics.FromImage(bitmap);
-                        G.FillEllipse(maxCircleBr, x, y, maxCircleRad, maxCircleRad);
-                        X.Add(x);
-                        X.Add(y);
-                    }
+                    G = Graphics.FromImage(bitmap);
+                    G.FillEllipse(maxCircleBr, x, y, maxCircleRad, maxCircleRad);
+                    X.Add(x);
+                    Y.Add(y);
+                    Time.Add(DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss"));
                 }
             });
         }
@@ -198,7 +226,7 @@ namespace HeatTracker
          */
         public IRestResponse getSyncData()
         {
-            var client = new RestClient(url);
+            var client = new RestClient(stopUrl);
             client.Timeout = -1;
             var request = new RestRequest(Method.GET);
             IRestResponse response = client.Execute(request);
@@ -214,7 +242,7 @@ namespace HeatTracker
             await Task.Run(() =>
             {
                 // call the python code to run and start collecting the muse-s data
-                var client = new RestClient(url);
+                var client = new RestClient(startUrl);
                 client.Timeout = -1;
                 var request = new RestRequest(Method.GET);
                 client.Execute(request);
@@ -233,14 +261,56 @@ namespace HeatTracker
                 WindowStyle = WindowStyle.ToolWindow;
                 BitmapImage tempbi = ToBitmapImage(bitmap);
                 ImageControl.Source = tempbi;
+                /*
+                 * close the muse-s connection
+                 */
+                IRestResponse response = getSyncData();
+                List<Muses> muses = JsonConvert.DeserializeObject<TimeMuses>(response.Content).getTime();
                 /**
                  * conver the list of muses into json and write in a file
                  */
-                string JSONresult = JsonConvert.SerializeObject(muses);
-                using (var tw = new StreamWriter(path + "resultJson\\" + selectedFileName + ".json", true))
+                String filepathMuse = path + "muse\\" + selectedFileName + "_muse.csv";
+                int j = 0;
+                foreach(Muses m in muses)
                 {
-                    tw.WriteLine(JSONresult.ToString());
-                    tw.Close();
+                    try
+                    {
+                        using (System.IO.StreamWriter file = new System.IO.StreamWriter(filepathMuse, true))
+                        {
+                            if (j == 0)
+                            {
+                                file.WriteLine("Time" + "," + "Alpha" + "," + "Beta" + "," + "Theta");
+                            }
+                            file.WriteLine(m.getTime() + "," + "\"" + m.getMuse().getAlpha() + "\"" + "," + "\"" + m.getMuse().getBeta() + "\""  + "," + "\"" + m.getMuse().getTheta() + "\"");
+                            j++;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        throw new ApplicationException("Error -------- ", e);
+                    }
+                }
+                /**
+                 * conver the list of muses into json and write in a file
+                 */
+                String filepath = path+"eyeTracker\\"+selectedFileName+ "_eye_tracker.csv";
+                for (int i = 0; i < X.Count; i++)
+                {
+                    try
+                    {
+                        using (System.IO.StreamWriter file = new System.IO.StreamWriter(@filepath,true))
+                        {
+                            if (i == 0)
+                            {
+                                file.WriteLine("Time" + "," + "X"+ "," + "Y");
+                            }
+                            file.WriteLine(Time[i]+","+X[i]+","+Y[i]);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        throw new ApplicationException("Error -------- ",e);
+                    }
                 }
                 Console.WriteLine("------------x-------------x-----------");
             }
@@ -258,8 +328,7 @@ namespace HeatTracker
         private void OnKeyDownHandler(object sender, KeyEventArgs e)
         {
             DateTime end = DateTime.Now;
-            var result = end.Subtract(start).TotalMinutes;
-            if (e.Key == Key.Enter && result > 2.7)
+            if (e.Key == Key.Enter)
             {
                 createFinalImage();
             }
@@ -355,6 +424,11 @@ namespace HeatTracker
                 height = (int)bitmap.Height;
                 width = (int)bitmap.Width;
                 coordinatesArray = new int[width, height];
+                /**
+                 * code for async call
+                 * getAsyncData();
+                 */
+                getAsyncData();
                 // call to function
                 ImageControl.Visibility = Visibility.Visible;
                 getCoordinates();
